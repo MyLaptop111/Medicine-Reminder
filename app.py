@@ -19,12 +19,37 @@ scaler = joblib.load("numeric_scaler.pkl")
 # =============================
 # إعداد الصفحة واللغة
 # =============================
-lang = st.selectbox("Language / اللغة", ["English", "العربية"])
+
+# إعداد الصفحة
 st.set_page_config(page_title="Medical AI CDS", layout="centered")
 
-# نصوص اللغات كما في النسخة السابقة
-texts = { ... }  # استخدم نفس القاموس texts من النسخة السابقة
+# اختيار اللغة
+lang_choice = st.selectbox("Language / اللغة", ["English", "العربية"])
+
+# تحويل اختيار المستخدم إلى مفتاح القاموس الصحيح
+lang = "en" if lang_choice == "English" else "ar"
+
+# نصوص اللغات
+texts = {
+    "en": {
+        "welcome": "Welcome to Medical AI CDS",
+        "description": "This system helps you with medicine reminders."
+        # أضف باقي النصوص هنا
+    },
+    "ar": {
+        "welcome": "مرحبًا بك في النظام الطبي الذكي",
+        "description": "هذا النظام يساعدك في تذكيرك بالأدوية."
+        # أضف باقي النصوص هنا
+    }
+}
+
+# جلب النصوص حسب اللغة المختارة
 t = texts[lang]
+
+# مثال على استخدامها
+st.title(t["welcome"])
+st.write(t["description"])
+
 
 st.title(t["title"])
 st.caption(t["caption"])
@@ -45,7 +70,7 @@ with tab1:
     with st.form("patient_form"):
         age = st.number_input(t["age"], 0, 120, 30)
         gender = st.selectbox(t["gender"], ["Male","Female","Other"] if lang=="English" else ["ذكر","أنثى","آخر"])
-        weight = st.number_input(t["weight"], 1.0, 300.0, 70.0)
+        weight = st.number_input(t["weight"], 90.0, 200.0, 70.0)
         smoker = st.selectbox(t["smoker"], ["No","Yes"] if lang=="English" else ["لا","نعم"])
         chronic_diseases = st.multiselect(
             t["chronic_diseases"],
