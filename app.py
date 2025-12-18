@@ -17,53 +17,66 @@ le_target = joblib.load("decision_encoder.pkl")
 scaler = joblib.load("numeric_scaler.pkl")
 
 # =============================
-# إعداد الصفحة واللغة
-# =============================
-
 # إعداد الصفحة
+# =============================
 st.set_page_config(page_title="Medical AI CDS", layout="centered")
 
+# =============================
 # اختيار اللغة
-lang_choice = st.selectbox("Language / اللغة", ["English", "العربية"])
-
-# تحويل اختيار المستخدم إلى مفتاح القاموس الصحيح
+# =============================
+lang_choice = st.selectbox("Language / اللغة", ["English", "العربية"], key="lang_select")
 lang = "en" if lang_choice == "English" else "ar"
 
-# نصوص اللغات
-texts = {
-    "en": {
-        "welcome": "Welcome to Medical AI CDS",
-        "description": "This system helps you with medicine reminders."
-        # أضف باقي النصوص هنا
-    },
-    "ar": {
-        "welcome": "مرحبًا بك في النظام الطبي الذكي",
-        "description": "هذا النظام يساعدك في تذكيرك بالأدوية."
-        # أضف باقي النصوص هنا
-    }
-}
-
-# جلب النصوص حسب اللغة المختارة
-lang = st.selectbox("Language / اللغة", ["English","العربية"])
-
-# Translation dictionary
+# =============================
+# القاموس النصي
+# =============================
 t = {
-    "title": "Medical AI Decision Support" if lang=="English" else "نظام دعم القرار الطبي",
-    "drug": "Drug" if lang=="English" else "الدواء",
-    "previous_decisions": "Previous Decisions" if lang=="English" else "القرارات السابقة",
-    "incorrect": "Incorrect" if lang=="English" else "خاطئ",
-    # أضف باقي العناوين حسب الحاجة
+    "title": "Medical AI Decision Support" if lang=="en" else "نظام دعم القرار الطبي",
+    "welcome": "Welcome to Medical AI CDS" if lang=="en" else "مرحبًا بك في النظام الطبي الذكي",
+    "description": "This system helps you with medicine reminders." if lang=="en" else "هذا النظام يساعدك في تذكيرك بالأدوية.",
+    "caption": "" if lang=="en" else "",
+    "warning": "⚠️ This system does NOT replace professional medical advice." if lang=="en" else "⚠️ هذا النظام لا يغني عن الاستشارة الطبية المتخصصة.",
+    "patient_info": "Patient Information" if lang=="en" else "معلومات المريض",
+    "prediction_feedback": "Prediction & Feedback" if lang=="en" else "التنبؤ والتغذية الراجعة",
+    "history_analysis": "History & Analysis" if lang=="en" else "السجل والتحليل",
+    "age": "Age" if lang=="en" else "العمر",
+    "gender": "Gender" if lang=="en" else "الجنس",
+    "weight": "Weight (kg)" if lang=="en" else "الوزن (كجم)",
+    "smoker": "Smoker" if lang=="en" else "مدخن",
+    "chronic_diseases": "Chronic Diseases" if lang=="en" else "الأمراض المزمنة",
+    "drug": "Drug" if lang=="en" else "الدواء",
+    "new_drug": "Add new Drug" if lang=="en" else "أضف دواء جديد",
+    "condition": "Condition" if lang=="en" else "الحالة",
+    "side_effects": "Side Effects" if lang=="en" else "الأعراض",
+    "get_recommendation": "Get Recommendation" if lang=="en" else "الحصول على التوصية",
+    "emergency": "🚨 EMERGENCY – Seek immediate medical help!" if lang=="en" else "🚨 حالة طارئة – توجه للطوارئ فورًا",
+    "risk_score": "Patient Risk Score" if lang=="en" else "درجة مخاطر المريض",
+    "drug_warning": "This drug was not in the original model" if lang=="en" else "هذا الدواء غير موجود في الموديل الأصلي",
+    "chronic_warning": "Some chronic diseases are unknown" if lang=="en" else "بعض الأمراض المزمنة غير معروفة",
+    "prediction_probs": "Prediction Probabilities" if lang=="en" else "احتمالات التنبؤ",
+    "final_recommendation": "Final Recommendation" if lang=="en" else "التوصية النهائية",
+    "continue": "✅ Continue medication and monitor." if lang=="en" else "✅ تابع تناول الدواء مع المراقبة",
+    "see_doctor": "⚠️ Consult a doctor as soon as possible." if lang=="en" else "⚠️ استشر الطبيب في أقرب وقت ممكن",
+    "emergency_msg": "🚨 Seek emergency medical attention." if lang=="en" else "🚨 توجه للطوارئ فورًا",
+    "feedback": "Feedback" if lang=="en" else "التغذية الراجعة",
+    "correct": "Correct" if lang=="en" else "صحيح",
+    "incorrect": "Incorrect" if lang=="en" else "خاطئ",
+    "not_sure": "Not Sure" if lang=="en" else "لست متأكد",
+    "correct_decision": "Correct Decision" if lang=="en" else "القرار الصحيح",
+    "feedback_saved": "Feedback saved successfully ✔" if lang=="en" else "تم حفظ التغذية الراجعة ✔"
 }
 
-# مثال على استخدامها
+# =============================
+# العنوان والوصف
+# =============================
 st.title(t["title"])
-drug = st.selectbox(t["drug"], le_drug.classes_)
-
 st.write(t["description"])
-
 st.caption(t["caption"])
 st.warning(t["warning"])
 
+# =============================
+# Session State
+# =============================
 if 'history' not in st.session_state:
     st.session_state.history = []
 
@@ -73,29 +86,27 @@ if 'history' not in st.session_state:
 tab1, tab2, tab3 = st.tabs([t["patient_info"], t["prediction_feedback"], t["history_analysis"]])
 
 # =============================
-# Tab 1: Patient Info & Medication
+# Tab 1: Patient Info
 # =============================
 with tab1:
     with st.form("patient_form"):
-        age = st.number_input(t["age"], 0, 120, 30)
-        gender = st.selectbox(t["gender"], ["Male","Female","Other"] if lang=="English" else ["ذكر","أنثى","آخر"])
-        weight = st.number_input(t["weight"], 90.0, 200.0, 70.0)
-        smoker = st.selectbox(t["smoker"], ["No","Yes"] if lang=="English" else ["لا","نعم"])
+        age = st.number_input(t["age"], 0, 120, 30, key="age")
+        gender = st.selectbox(t["gender"], ["Male","Female","Other"] if lang=="en" else ["ذكر","أنثى","آخر"], key="gender")
+        weight = st.number_input(t["weight"], 1.0, 300.0, 70.0, key="weight")
+        smoker = st.selectbox(t["smoker"], ["No","Yes"] if lang=="en" else ["لا","نعم"], key="smoker")
         chronic_diseases = st.multiselect(
             t["chronic_diseases"],
-            ["Diabetes","Hypertension","Heart Disease","Kidney Disease","None"] if lang=="English" else ["سكري","ضغط الدم","أمراض القلب","أمراض الكلى","لا يوجد"]
+            ["Diabetes","Hypertension","Heart Disease","Kidney Disease","None"] if lang=="en" else ["سكري","ضغط الدم","أمراض القلب","أمراض الكلى","لا يوجد"],
+            key="chronic"
         )
-        drug = st.selectbox(t["drug"], le_drug.classes_)
-        new_drug = st.text_input(t["new_drug"])
-        condition = st.selectbox(t["condition"], le_target.classes_)
-        side_effects = st.text_area(
-            t["side_effects"],
-            placeholder="e.g. nausea, dizziness" if lang=="English" else "مثال: غثيان، دوخة"
-        )
+        drug = st.selectbox(t["drug"], le_drug.classes_, key="drug")
+        new_drug = st.text_input(t["new_drug"], key="new_drug")
+        condition = st.selectbox(t["condition"], le_target.classes_, key="condition")
+        side_effects = st.text_area(t["side_effects"], placeholder="e.g. nausea, dizziness" if lang=="en" else "مثال: غثيان، دوخة", key="side_effects")
         submitted = st.form_submit_button(t["get_recommendation"])
 
 # =============================
-# Tab 2: Prediction & Feedback with Plotly
+# Tab 2: Prediction & Feedback
 # =============================
 with tab2:
     if submitted and side_effects.strip():
@@ -113,7 +124,7 @@ with tab2:
             drug_to_use = drug
 
         # Emergency check
-        EMERGENCY = ['breathing','chest pain','seizure','unconscious','anaphylaxis'] if lang=="English" else ['صعوبة في التنفس','ألم في الصدر','تشنجات','فقدان الوعي','صدمة تحسسية']
+        EMERGENCY = ['breathing','chest pain','seizure','unconscious','anaphylaxis'] if lang=="en" else ['صعوبة في التنفس','ألم في الصدر','تشنجات','فقدان الوعي','صدمة تحسسية']
         if any(k in side_effects.lower() for k in EMERGENCY):
             st.error(t["emergency"])
             st.stop()
@@ -122,8 +133,10 @@ with tab2:
         risk_score = 0
         if age >= 65: risk_score += 2
         if smoker=="Yes" or smoker=="نعم": risk_score += 1
-        if ("Heart Disease" in chronic_diseases) or ("أمراض القلب" in chronic_diseases): risk_score +=2
-        if ("Kidney Disease" in chronic_diseases) or ("أمراض الكلى" in chronic_diseases): risk_score +=2
+        chronic_options = ["Diabetes","Hypertension","Heart Disease","Kidney Disease","None"] if lang=="en" else ["سكري","ضغط الدم","أمراض القلب","أمراض الكلى","لا يوجد"]
+        for d in chronic_diseases:
+            if d in ["Heart Disease","أمراض القلب"]: risk_score += 2
+            if d in ["Kidney Disease","أمراض الكلى"]: risk_score += 2
         st.metric(t["risk_score"], risk_score, "/10")
 
         # Feature encoding
@@ -132,12 +145,8 @@ with tab2:
         except ValueError:
             st.warning(t["drug_warning"])
             drug_enc = 0
-        chronic_options = ["Diabetes","Hypertension","Heart Disease","Kidney Disease","None"] if lang=="English" else ["سكري","ضغط الدم","أمراض القلب","أمراض الكلى","لا يوجد"]
         chronic_vector = [1 if d in chronic_diseases else 0 for d in chronic_options]
-        unknown_chronic = [d for d in chronic_diseases if d not in chronic_options]
-        if unknown_chronic:
-            st.warning(f"{t['chronic_warning']}: {', '.join(unknown_chronic)}")
-        has_chronic = 1 if sum(chronic_vector) > 0 else 0
+        has_chronic = 1 if sum(chronic_vector)>0 else 0
 
         text_vec = vectorizer.transform([side_effects])
         X_num = scaler.transform([[age, weight]])
@@ -152,9 +161,7 @@ with tab2:
         if confidence < thresholds.get(decision,0.5) or np.max(probs)<0.45 or risk_score>=4:
             decision = "See_Doctor"
 
-        # =============================
         # Plotly Chart for Prediction Probabilities
-        # =============================
         pred_df = pd.DataFrame({
             "Decision": le_target.inverse_transform(range(len(probs))),
             "Probability": probs
@@ -176,29 +183,10 @@ with tab2:
         st.subheader(t["feedback"])
         feedback = st.radio(t["feedback"], [t["correct"], t["incorrect"], t["not_sure"]], key="feedback_radio")
         correct_decision = None
-        if feedback == t["incorrect"]:
+        if feedback==t["incorrect"]:
             correct_decision = st.selectbox(t["correct_decision"], le_target.classes_, key="correct_decision_select")
 
-        if st.button("💾 Submit Feedback"):
-            with open("feedback_log.csv","a",newline="",encoding="utf-8") as f:
-                pd.DataFrame([{
-                    "Time": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                    "Age": age,
-                    "Gender": gender,
-                    "Weight": weight,
-                    "Smoker": smoker,
-                    "RiskScore": risk_score,
-                    "Drug": drug_to_use,
-                    "Condition": condition,
-                    "ChronicDiseases": ",".join(chronic_diseases),
-                    "Symptoms": side_effects,
-                    "Decision": decision,
-                    "Confidence": round(confidence,3),
-                    "Feedback": feedback,
-                    "CorrectDecision": correct_decision
-                }]).to_csv(f, index=False, header=f.tell()==0)
-            st.success(t["feedback_saved"])
-
+        # Save feedback
         record = {
             "Time": datetime.now().strftime("%Y-%m-%d %H:%M"),
             "Age": age,
@@ -216,9 +204,12 @@ with tab2:
             "CorrectDecision": correct_decision
         }
         st.session_state.history.append(record)
+        if st.button("💾 Submit Feedback", key="submit_feedback"):
+            pd.DataFrame([record]).to_csv("feedback_log.csv", mode="a", index=False, header=not pd.io.common.file_exists("feedback_log.csv"))
+            st.success(t["feedback_saved"])
 
 # =============================
-# Tab 3: History & Analysis with Plotly
+# Tab 3: History & Analysis
 # =============================
 with tab3:
     if st.session_state.history:
@@ -250,3 +241,4 @@ with tab3:
             st.write(f"Total: {len(emergency_cases)}")
             if not emergency_cases.empty:
                 st.dataframe(emergency_cases[['Time','Drug','Condition','ChronicDiseases','Symptoms','Confidence']])
+
