@@ -171,7 +171,10 @@ with tab2:
         has_chronic = 1 if sum(chronic_vector) > 0 else 0
 
         # Transform numeric safely
-        X_num = scaler.transform(np.array([[age, weight]]))
+       # تحويل المدخلات الرقمية لتتوافق مع Scaler
+        smoker_val = 1 if smoker=="Yes" or smoker=="نعم" else 0
+        X_num = scaler.transform([[age, weight, smoker_val]])
+
 
         X = np.hstack([vectorizer.transform([side_effects]).toarray(), [[drug_enc, *chronic_vector, has_chronic]], X_num])
         probs = model.predict_proba(X)[0]
