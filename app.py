@@ -44,14 +44,23 @@ texts = {
 }
 
 # جلب النصوص حسب اللغة المختارة
-t = texts[lang]
+lang = st.selectbox("Language / اللغة", ["English","العربية"])
+
+# Translation dictionary
+t = {
+    "title": "Medical AI Decision Support" if lang=="English" else "نظام دعم القرار الطبي",
+    "drug": "Drug" if lang=="English" else "الدواء",
+    "previous_decisions": "Previous Decisions" if lang=="English" else "القرارات السابقة",
+    "incorrect": "Incorrect" if lang=="English" else "خاطئ",
+    # أضف باقي العناوين حسب الحاجة
+}
 
 # مثال على استخدامها
-st.title(t["welcome"])
+st.title(t["title"])
+drug = st.selectbox(t["drug"], le_drug.classes_)
+
 st.write(t["description"])
 
-
-st.title(t["title"])
 st.caption(t["caption"])
 st.warning(t["warning"])
 
